@@ -65,6 +65,9 @@
         @keyframes pulse-highlight { 0% { background-color: #e0f2fe; } 50% { background-color: #bae6fd; } 100% { background-color: #e0f2fe; } }
 
         .status-msg { font-size: 0.8rem; color: var(--success); font-weight: bold; margin-left: 10px; }
+
+        /* CORRECCIÓN: CURSOR MANITO EN GRÁFICOS */
+        .js-plotly-plot .plotly .draglayer .nsewdrag, .js-plotly-plot .plotly .point { cursor: pointer !important; }
     </style>
 </head>
 <body>
@@ -148,7 +151,6 @@
     const USUARIO = "gpgobbi4";
     const REPO = "OEE-y-GE-Planta-RII";
 
-    // --- CARGA AUTOMÁTICA AL INICIAR ---
     window.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('file-count').innerText = "⌛ Sincronizando datos...";
         await cargarTodoElAnio();
@@ -191,7 +193,6 @@
         } catch (e) {}
     }
 
-    // --- FUNCIONES DE PROCESAMIENTO ---
     function procesarFilasDirecto(rows) {
         rows.slice(1).forEach(r => {
             if (r.length > 10) {
@@ -255,7 +256,13 @@
 
     function actualizarSelector() {
         const s = document.getElementById('fecha-selector');
-        const f = [...new Set(rawDataStore.map(d => d.fecha instanceof Date ? d.fecha.toLocaleDateString() : d.fecha))].sort();
+        // CORRECCIÓN: ORDENAR FECHAS CRONOLÓGICAMENTE
+        const f = [...new Set(rawDataStore.map(d => d.fecha instanceof Date ? d.fecha.toLocaleDateString() : d.fecha))];
+        f.sort((a, b) => {
+            const [da, ma, aa] = a.split('/').map(Number);
+            const [db, mb, ab] = b.split('/').map(Number);
+            return new Date(aa, ma - 1, da) - new Date(ab, mb - 1, db);
+        });
         s.innerHTML = '<option value="ALL">CONSOLIDADO TOTAL</option>';
         f.forEach(val => s.innerHTML += `<option value="${val}">${val}</option>`);
     }
