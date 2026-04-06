@@ -26,7 +26,7 @@
         header { background: var(--primary); color: white; padding: 15px; text-align: center; }
         .controls-bar { background: #fff; padding: 15px; display: flex; justify-content: center; gap: 20px; align-items: center; border-bottom: 2px solid #ddd; position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; }
         
-        /* ESTILOS NUEVOS SELECTOR COLAPSABLE */
+        /* SELECTOR COLAPSABLE */
         .custom-select-container { position: relative; min-width: 250px; }
         .select-trigger { padding: 8px 15px; border-radius: 6px; border: 2px solid var(--primary); font-weight: bold; color: var(--primary); cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center; }
         .select-dropdown { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ccc; border-radius: 0 0 6px 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-height: 400px; overflow-y: auto; z-index: 2000; }
@@ -41,11 +41,15 @@
         .all-option { padding: 10px; font-weight: bold; color: var(--primary); cursor: pointer; border-bottom: 2px solid #eee; }
         .all-option:hover { background: #e0f2fe; }
 
-        .btn-reservorio { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-reset { background: white; color: var(--danger); border: 2px solid var(--danger); padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        /* INTERACTIVIDAD Y CURSORES */
+        .ceco-header, .tab-btn, .btn-reservorio, .btn-reset { cursor: pointer; }
+        .js-plotly-plot .plotly .draglayer .nsewdrag, .js-plotly-plot .plotly .point { cursor: pointer !important; }
+
+        .btn-reservorio { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; }
+        .btn-reset { background: white; color: var(--danger); border: 2px solid var(--danger); padding: 8px 15px; border-radius: 6px; font-weight: bold; transition: all 0.2s; }
         .btn-reset:hover { background: var(--danger); color: white; }
         .tabs { display: flex; justify-content: center; background: #fff; border-bottom: 2px solid #ddd; position: sticky; top: 72px; z-index: 100; }
-        .tab-btn { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: bold; color: #666; font-size: 0.85rem; }
+        .tab-btn { padding: 12px 20px; border: none; background: none; font-weight: bold; color: #666; font-size: 0.85rem; }
         .tab-btn.active { color: var(--primary); border-bottom: 4px solid var(--primary); background: #f8f9fa; }
         .container { padding: 15px; max-width: 1300px; margin: auto; }
         .content { display: none; } .content.active { display: block; }
@@ -59,7 +63,7 @@
         .card h3 { font-size: 0.75rem; margin: 5px 0; color: #666; text-transform: uppercase; }
         .card .value { font-size: 1.5rem; font-weight: bold; }
         .ceco-group { margin-bottom: 10px; border-radius: 8px; overflow: hidden; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); scroll-margin-top: 150px; transition: background-color 0.5s ease; }
-        .ceco-header { background: #f8f9fa; padding: 12px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-left: 5px solid var(--accent); }
+        .ceco-header { background: #f8f9fa; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-left: 5px solid var(--accent); }
         .ceco-content { display: none; padding: 10px; overflow-x: auto; }
         .ceco-content.open { display: block; }
         .highlight-select { background-color: #e0f2fe !important; animation: pulse-highlight 1.5s ease-out; }
@@ -75,15 +79,13 @@
 
 <div class="controls-bar">
     <div><strong>Subir Local:</strong> <input type="file" id="upload" accept=".xlsx, .xls" multiple /> <span id="file-count" class="status-msg"></span></div>
-    
     <div>
         <strong>Reservorio:</strong> 
         <input type="date" id="fecha-reservorio" style="padding:5px; border-radius:4px; border:2px solid var(--primary);">
         <button class="btn-reservorio" onclick="cargarDesdeReservorio()">📥 Cargar</button>
     </div>
-
     <div class="custom-select-container">
-        <div class="select-trigger" id="select-trigger" onclick="toggleDropdown()">
+        <div class="select-trigger" onclick="toggleDropdown()">
             <span id="selected-label">CONSOLIDADO TOTAL</span>
             <span>▼</span>
         </div>
@@ -92,7 +94,6 @@
             <div id="dropdown-content"></div>
         </div>
     </div>
-
     <button class="btn-reset" onclick="resetearDatos()">🗑️ Limpiar Todo</button>
 </div>
 
@@ -118,11 +119,9 @@
         <div class="section-title">DETALLE POR LÍNEA</div>
         <div id="contenedor-acordeon"></div>
     </div>
-
     <div id="tab-memoria" class="content">
         <div class="card"><table id="tabla-memoria-calculo"><thead><tr><th>Fecha</th><th>OT</th><th>Turno</th><th>Ctro. Costo</th><th>Nominal</th><th>Producido</th><th>OEE %</th><th>GE %</th></tr></thead><tbody id="body-memoria"></tbody></table></div>
     </div>
-
     <div id="tab-tabla" class="content"><div id="out-tabla">Suba uno o más archivos para comenzar...</div></div>
 </div>
 
@@ -132,14 +131,12 @@
     const REPO = "OEE-y-GE-Planta-RII";
     let filtroActual = "ALL";
 
-    // CARGA AUTOMÁTICA AL INICIAR
     window.addEventListener('DOMContentLoaded', async () => {
         await cargarTodoElAnio();
         actualizarSelector();
-        aplicarFiltro();
+        aplicarFiltro(); // Carga inicial de datos
     });
 
-    // CERRAR SELECTOR AL CLICKEAR FUERA
     window.onclick = function(event) {
         if (!event.target.closest('.custom-select-container')) {
             document.getElementById("select-dropdown").classList.remove("show");
@@ -159,7 +156,7 @@
     function actualizarSelector() {
         const container = document.getElementById('dropdown-content');
         container.innerHTML = "";
-        const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        const mesesNombres = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         const fechasUnicas = [...new Set(rawDataStore.map(d => d.fecha instanceof Date ? d.fecha.toLocaleDateString() : d.fecha))];
         
         const fechasMapeadas = fechasUnicas.map(f => {
@@ -169,12 +166,12 @@
 
         const grupos = {};
         fechasMapeadas.forEach(item => {
-            const mesNombre = nombresMeses[item.fechaObj.getMonth()];
+            const mesNombre = mesesNombres[item.fechaObj.getMonth()];
             if (!grupos[mesNombre]) grupos[mesNombre] = [];
             grupos[mesNombre].push(item.original);
         });
 
-        nombresMeses.forEach((mes, idx) => {
+        mesesNombres.forEach((mes, idx) => {
             if (grupos[mes]) {
                 const mesId = `mes-${idx}`;
                 container.innerHTML += `
@@ -188,15 +185,16 @@
 
     async function cargarTodoElAnio() {
         const anio = "2026";
-        const meses = ["01_Enero", "02_Febrero", "03_Marzo", "04_Abril", "05_Mayo", "06_Junio", "07_Julio", "08_Agosto", "09_Septiembre", "10_Octubre", "11_Noviembre", "12_Diciembre"];
-        for (let m = 0; m < meses.length; m++) {
+        const mesesRutas = ["01_Enero", "02_Febrero", "03_Marzo", "04_Abril", "05_Mayo", "06_Junio", "07_Julio", "08_Agosto", "09_Septiembre", "10_Octubre", "11_Noviembre", "12_Diciembre"];
+        document.getElementById('file-count').innerText = "⌛ Sincronizando reservorio...";
+        for (let m = 0; m < mesesRutas.length; m++) {
             const mesNum = String(m + 1).padStart(2, '0');
             for (let d = 1; d <= 31; d++) {
-                const url = `https://raw.githubusercontent.com/${USUARIO}/${REPO}/main/data/${anio}/${meses[m]}/${String(d).padStart(2, '0')}-${mesNum}-${anio}.xlsx`;
+                const url = `https://raw.githubusercontent.com/${USUARIO}/${REPO}/main/data/${anio}/${mesesRutas[m]}/${String(d).padStart(2, '0')}-${mesNum}-${anio}.xlsx`;
                 await fetchSilencioso(url);
             }
         }
-        document.getElementById('file-count').innerText = `✅ Reservorio sincronizado`;
+        document.getElementById('file-count').innerText = `✅ Datos listos`;
     }
 
     async function fetchSilencioso(url) {
