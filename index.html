@@ -65,9 +65,11 @@
         @keyframes pulse-highlight { 0% { background-color: #e0f2fe; } 50% { background-color: #bae6fd; } 100% { background-color: #e0f2fe; } }
 
         .status-msg { font-size: 0.8rem; color: var(--success); font-weight: bold; margin-left: 10px; }
-
-        /* CORRECCIÓN: CURSOR MANITO EN GRÁFICOS */
         .js-plotly-plot .plotly .draglayer .nsewdrag, .js-plotly-plot .plotly .point { cursor: pointer !important; }
+
+        /* Estilo para los grupos en el selector */
+        optgroup { font-weight: bold; color: var(--primary); background: #fff; }
+        option { font-weight: normal; color: #333; }
     </style>
 </head>
 <body>
@@ -213,7 +215,7 @@
         const fechaInput = document.getElementById('fecha-reservorio').value;
         if(!fechaInput) return;
         const p = fechaInput.split("-");
-        const url = `https://raw.githubusercontent.com/${USUARIO}/${REPO}/main/data/${p[0]}/${obtenerNombreMes(p[1])}/${p[2]}-${p[1]}-${p[0]}.xlsx`;
+        const url = `https://raw.githubusercontent.com/${p[0]}/${obtenerNombreMes(p[1])}/${p[2]}-${p[1]}-${p[0]}.xlsx`;
         await fetchSilencioso(url);
         actualizarSelector();
         aplicarFiltro();
@@ -256,15 +258,41 @@
 
     function actualizarSelector() {
         const s = document.getElementById('fecha-selector');
-        // CORRECCIÓN: ORDENAR FECHAS CRONOLÓGICAMENTE
-        const f = [...new Set(rawDataStore.map(d => d.fecha instanceof Date ? d.fecha.toLocaleDateString() : d.fecha))];
-        f.sort((a, b) => {
-            const [da, ma, aa] = a.split('/').map(Number);
-            const [db, mb, ab] = b.split('/').map(Number);
-            return new Date(aa, ma - 1, da) - new Date(ab, mb - 1, db);
+        const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        
+        // Obtener fechas únicas y convertirlas a objetos Date reales para ordenar
+        const fechasUnicas = [...new Set(rawDataStore.map(d => d.fecha instanceof Date ? d.fecha.toLocaleDateString() : d.fecha))];
+        
+        const fechasMapeadas = fechasUnicas.map(f => {
+            const [d, m, a] = f.split('/').map(Number);
+            return { original: f, fechaObj: new Date(a, m - 1, d) };
+        }).sort((a, b) => a.fechaObj - b.fechaObj);
+
+        // Agrupar por mes
+        const grupos = {};
+        fechasMapeadas.forEach(item => {
+            const mesIdx = item.fechaObj.getMonth();
+            const mesNombre = nombresMeses[mesIdx];
+            if (!grupos[mesNombre]) grupos[mesNombre] = [];
+            grupos[mesNombre].push(item.original);
         });
+
         s.innerHTML = '<option value="ALL">CONSOLIDADO TOTAL</option>';
-        f.forEach(val => s.innerHTML += `<option value="${val}">${val}</option>`);
+        
+        // Mantener orden cronológico de los meses presentes
+        nombresMeses.forEach(mes => {
+            if (grupos[mes]) {
+                const optGroup = document.createElement('optgroup');
+                optGroup.label = mes.toUpperCase();
+                grupos[mes].forEach(fecha => {
+                    const opt = document.createElement('option');
+                    opt.value = fecha;
+                    opt.textContent = fecha;
+                    optGroup.appendChild(opt);
+                });
+                s.appendChild(optGroup);
+            }
+        });
     }
 
     function aplicarFiltro() {
