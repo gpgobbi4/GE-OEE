@@ -26,7 +26,6 @@
         header { background: var(--primary); color: white; padding: 15px; text-align: center; }
         .controls-bar { background: #fff; padding: 15px; display: flex; justify-content: center; gap: 20px; align-items: center; border-bottom: 2px solid #ddd; position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; }
         
-        /* ESTILOS SELECTOR INTERACTIVO */
         .custom-select-container { position: relative; min-width: 250px; }
         .select-trigger { padding: 8px 15px; border-radius: 6px; border: 2px solid var(--primary); font-weight: bold; color: var(--primary); cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center; }
         .select-dropdown { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ccc; border-radius: 0 0 6px 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-height: 400px; overflow-y: auto; z-index: 2000; }
@@ -47,6 +46,7 @@
         .tabs { display: flex; justify-content: center; background: #fff; border-bottom: 2px solid #ddd; position: sticky; top: 72px; z-index: 100; }
         .tab-btn { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: bold; color: #666; font-size: 0.85rem; }
         .tab-btn.active { color: var(--primary); border-bottom: 4px solid var(--primary); background: #f8f9fa; }
+        
         .container { padding: 15px; max-width: 1300px; margin: auto; }
         .content { display: none; } .content.active { display: block; }
         .kpi-main { background: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; border: 2px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -57,10 +57,15 @@
         .card.turno-m { border-top: 5px solid var(--m); } .card.turno-t { border-top: 5px solid var(--t); } .card.turno-n { border-top: 5px solid var(--n); }
         .card.ceco-card { border-top: 5px solid var(--accent); }
         .card .value { font-size: 1.5rem; font-weight: bold; }
-        .ceco-group { margin-bottom: 10px; border-radius: 8px; overflow: hidden; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); scroll-margin-top: 150px; }
+        
+        .ceco-group { margin-bottom: 10px; border-radius: 8px; overflow: hidden; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); scroll-margin-top: 150px; transition: background-color 0.5s ease; }
         .ceco-header { background: #f8f9fa; padding: 12px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-left: 5px solid var(--accent); }
         .ceco-content { display: none; padding: 10px; overflow-x: auto; }
         .ceco-content.open { display: block; }
+        
+        .highlight-select { background-color: #e0f2fe !important; animation: pulse-highlight 1.5s ease-out; }
+        @keyframes pulse-highlight { 0% { background-color: #e0f2fe; } 50% { background-color: #bae6fd; } 100% { background-color: #e0f2fe; } }
+
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
         th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
         .status-msg { font-size: 0.8rem; color: var(--success); font-weight: bold; margin-left: 10px; }
@@ -133,21 +138,14 @@
         aplicarFiltro();
     });
 
-    // Cerrar dropdown al hacer clic fuera
     window.onclick = function(event) {
         if (!event.target.closest('.custom-select-container')) {
             document.getElementById("select-dropdown").classList.remove("show");
         }
     }
 
-    function toggleDropdown() {
-        document.getElementById("select-dropdown").classList.toggle("show");
-    }
-
-    function toggleMes(id, event) {
-        event.stopPropagation();
-        document.getElementById(id).classList.toggle('open');
-    }
+    function toggleDropdown() { document.getElementById("select-dropdown").classList.toggle("show"); }
+    function toggleMes(id, event) { event.stopPropagation(); document.getElementById(id).classList.toggle('open'); }
 
     function seleccionarFecha(valor, etiqueta) {
         filtroActual = valor;
@@ -193,7 +191,6 @@
         });
     }
 
-    // --- RESTO DEL CÓDIGO (SIN CAMBIOS) ---
     async function cargarTodoElAnio() {
         const anio = "2026";
         const meses = ["01_Enero", "02_Febrero", "03_Marzo", "04_Abril", "05_Mayo", "06_Junio", "07_Julio", "08_Agosto", "09_Septiembre", "10_Octubre", "11_Noviembre", "12_Diciembre"];
@@ -286,7 +283,8 @@
 
         document.getElementById('dir-oee').innerText = calcOEE(gn, gp).toFixed(1) + "%";
         ["MAÑANA", "TARDE", "NOCHE"].forEach(t => {
-            document.getElementById(`oee-${t.charAt(0).toLowerCase()}`).innerText = calcOEE(ts[t].n, ts[t].p).toFixed(1) + "%";
+            const el = document.getElementById(`oee-${t.charAt(0).toLowerCase()}`);
+            if(el) el.innerText = calcOEE(ts[t].n, ts[t].p).toFixed(1) + "%";
         });
 
         const labels = Object.keys(cd).sort();
@@ -308,6 +306,17 @@
 
     function renderGrafico(id, t, x, y, c) {
         Plotly.newPlot(id, [{ x, y, type: 'bar', marker: {color: c}, text: y.map(v=>v+'%'), textposition: 'auto' }], { title: t });
+        document.getElementById(id).on('plotly_click', d => {
+            const cecoLabel = d.points[0].x;
+            const target = document.getElementById('scroll-' + cecoLabel.replace(/\s+/g, ''));
+            if(target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+                const content = target.querySelector('.ceco-content');
+                if(content) content.classList.add('open');
+                target.classList.add('highlight-select');
+                setTimeout(() => target.classList.remove('highlight-select'), 1500);
+            }
+        });
     }
 
     function renderTablaOriginal(data) {
