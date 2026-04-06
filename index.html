@@ -26,6 +26,7 @@
         header { background: var(--primary); color: white; padding: 15px; text-align: center; }
         .controls-bar { background: #fff; padding: 15px; display: flex; justify-content: center; gap: 20px; align-items: center; border-bottom: 2px solid #ddd; position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; }
         
+        /* ESTILOS SELECTOR INTERACTIVO */
         .custom-select-container { position: relative; min-width: 250px; }
         .select-trigger { padding: 8px 15px; border-radius: 6px; border: 2px solid var(--primary); font-weight: bold; color: var(--primary); cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center; }
         .select-dropdown { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ccc; border-radius: 0 0 6px 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-height: 400px; overflow-y: auto; z-index: 2000; }
@@ -306,15 +307,22 @@
 
     function renderGrafico(id, t, x, y, c) {
         Plotly.newPlot(id, [{ x, y, type: 'bar', marker: {color: c}, text: y.map(v=>v+'%'), textposition: 'auto' }], { title: t });
-        document.getElementById(id).on('plotly_click', d => {
-            const cecoLabel = d.points[0].x;
-            const target = document.getElementById('scroll-' + cecoLabel.replace(/\s+/g, ''));
-            if(target) {
-                target.scrollIntoView({ behavior: 'smooth' });
-                const content = target.querySelector('.ceco-content');
+        
+        // REINSTALACIÓN DE LA INTERACCIÓN DE CLIC
+        document.getElementById(id).on('plotly_click', function(data) {
+            const cecoNombre = data.points[0].x;
+            const targetId = 'scroll-' + cecoNombre.replace(/\s+/g, '');
+            const targetElement = document.getElementById(targetId);
+            
+            if(targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth' });
+                // Abre el acordeón del CECO automáticamente
+                const content = targetElement.querySelector('.ceco-content');
                 if(content) content.classList.add('open');
-                target.classList.add('highlight-select');
-                setTimeout(() => target.classList.remove('highlight-select'), 1500);
+                
+                // Efecto visual de resaltado
+                targetElement.classList.add('highlight-select');
+                setTimeout(() => targetElement.classList.remove('highlight-select'), 1500);
             }
         });
     }
