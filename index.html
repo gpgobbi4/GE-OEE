@@ -26,7 +26,7 @@
         header { background: var(--primary); color: white; padding: 15px; text-align: center; }
         .controls-bar { background: #fff; padding: 15px; display: flex; justify-content: center; gap: 20px; align-items: center; border-bottom: 2px solid #ddd; position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; }
         
-        /* ESTILOS SELECTOR INTERACTIVO */
+        /* ESTILOS NUEVOS SELECTOR COLAPSABLE */
         .custom-select-container { position: relative; min-width: 250px; }
         .select-trigger { padding: 8px 15px; border-radius: 6px; border: 2px solid var(--primary); font-weight: bold; color: var(--primary); cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center; }
         .select-dropdown { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ccc; border-radius: 0 0 6px 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-height: 400px; overflow-y: auto; z-index: 2000; }
@@ -47,7 +47,6 @@
         .tabs { display: flex; justify-content: center; background: #fff; border-bottom: 2px solid #ddd; position: sticky; top: 72px; z-index: 100; }
         .tab-btn { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: bold; color: #666; font-size: 0.85rem; }
         .tab-btn.active { color: var(--primary); border-bottom: 4px solid var(--primary); background: #f8f9fa; }
-        
         .container { padding: 15px; max-width: 1300px; margin: auto; }
         .content { display: none; } .content.active { display: block; }
         .kpi-main { background: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; border: 2px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -57,20 +56,17 @@
         .card { background: white; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
         .card.turno-m { border-top: 5px solid var(--m); } .card.turno-t { border-top: 5px solid var(--t); } .card.turno-n { border-top: 5px solid var(--n); }
         .card.ceco-card { border-top: 5px solid var(--accent); }
+        .card h3 { font-size: 0.75rem; margin: 5px 0; color: #666; text-transform: uppercase; }
         .card .value { font-size: 1.5rem; font-weight: bold; }
-        
         .ceco-group { margin-bottom: 10px; border-radius: 8px; overflow: hidden; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); scroll-margin-top: 150px; transition: background-color 0.5s ease; }
         .ceco-header { background: #f8f9fa; padding: 12px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; border-left: 5px solid var(--accent); }
         .ceco-content { display: none; padding: 10px; overflow-x: auto; }
         .ceco-content.open { display: block; }
-        
         .highlight-select { background-color: #e0f2fe !important; animation: pulse-highlight 1.5s ease-out; }
         @keyframes pulse-highlight { 0% { background-color: #e0f2fe; } 50% { background-color: #bae6fd; } 100% { background-color: #e0f2fe; } }
-
         table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
         th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
         .status-msg { font-size: 0.8rem; color: var(--success); font-weight: bold; margin-left: 10px; }
-        .js-plotly-plot .plotly .draglayer .nsewdrag, .js-plotly-plot .plotly .point { cursor: pointer !important; }
     </style>
 </head>
 <body>
@@ -78,10 +74,11 @@
 <header><h1>Análisis Gestión de Planta CPRII</h1></header>
 
 <div class="controls-bar">
-    <div><strong>Subir:</strong> <input type="file" id="upload" accept=".xlsx, .xls" multiple /> <span id="file-count" class="status-msg"></span></div>
+    <div><strong>Subir Local:</strong> <input type="file" id="upload" accept=".xlsx, .xls" multiple /> <span id="file-count" class="status-msg"></span></div>
     
     <div>
-        <input type="date" id="fecha-reservorio" style="padding:5px; border-radius:4px;">
+        <strong>Reservorio:</strong> 
+        <input type="date" id="fecha-reservorio" style="padding:5px; border-radius:4px; border:2px solid var(--primary);">
         <button class="btn-reservorio" onclick="cargarDesdeReservorio()">📥 Cargar</button>
     </div>
 
@@ -96,27 +93,29 @@
         </div>
     </div>
 
-    <button class="btn-reset" onclick="resetearDatos()">🗑️ Limpiar</button>
+    <button class="btn-reset" onclick="resetearDatos()">🗑️ Limpiar Todo</button>
 </div>
 
 <div class="tabs">
-    <button class="tab-btn active" onclick="showTab(event, 'tab-directorio')">🚀 DASHBOARD</button>
-    <button class="tab-btn" onclick="showTab(event, 'tab-memoria')">🧮 MEMORIA</button>
-    <button class="tab-btn" onclick="showTab(event, 'tab-tabla')">📋 TABLA</button>
+    <button class="tab-btn active" onclick="showTab(event, 'tab-directorio')">🚀 DASHBOARD INTERACTIVO</button>
+    <button class="tab-btn" onclick="showTab(event, 'tab-memoria')">🧮 MEMORIA DE CÁLCULO</button>
+    <button class="tab-btn" onclick="showTab(event, 'tab-tabla')">📋 TABLA ACUMULADA</button>
 </div>
 
 <div class="container">
     <div id="tab-directorio" class="content active">
-        <div class="kpi-main"><h3>OEE GLOBAL</h3><div id="dir-oee" class="value">0%</div></div>
-        <div class="section-title">OEE POR TURNO</div>
+        <div class="kpi-main"><h3>OEE GLOBAL ACUMULADO</h3><div id="dir-oee" class="value">0%</div></div>
+        <div class="section-title">OEE POR TURNO (TOTALIZADO)</div>
         <div class="grid-kpis">
             <div class="card turno-m"><h3>Mañana</h3><div id="oee-m" class="value">0%</div></div>
             <div class="card turno-t"><h3>Tarde</h3><div id="oee-t" class="value">0%</div></div>
             <div class="card turno-n"><h3>Noche</h3><div id="oee-n" class="value">0%</div></div>
         </div>
+        <div class="section-title">OEE POR CENTRO DE COSTO</div>
         <div id="grid-ceco-kpis" class="grid-kpis"></div>
-        <div class="card" id="grafico-ceco-oee" style="min-height:350px; margin-bottom: 20px;"></div>
-        <div class="card" id="grafico-ceco-ge" style="min-height:350px; margin-bottom: 20px;"></div>
+        <div class="card" id="grafico-ceco-oee" style="min-height:400px; margin-bottom: 20px;"></div>
+        <div class="card" id="grafico-ceco-ge" style="min-height:400px; margin-bottom: 20px;"></div>
+        <div class="section-title">DETALLE POR LÍNEA</div>
         <div id="contenedor-acordeon"></div>
     </div>
 
@@ -124,7 +123,7 @@
         <div class="card"><table id="tabla-memoria-calculo"><thead><tr><th>Fecha</th><th>OT</th><th>Turno</th><th>Ctro. Costo</th><th>Nominal</th><th>Producido</th><th>OEE %</th><th>GE %</th></tr></thead><tbody id="body-memoria"></tbody></table></div>
     </div>
 
-    <div id="tab-tabla" class="content"><div id="out-tabla">Cargando...</div></div>
+    <div id="tab-tabla" class="content"><div id="out-tabla">Suba uno o más archivos para comenzar...</div></div>
 </div>
 
 <script>
@@ -133,12 +132,14 @@
     const REPO = "OEE-y-GE-Planta-RII";
     let filtroActual = "ALL";
 
+    // CARGA AUTOMÁTICA AL INICIAR
     window.addEventListener('DOMContentLoaded', async () => {
         await cargarTodoElAnio();
         actualizarSelector();
         aplicarFiltro();
     });
 
+    // CERRAR SELECTOR AL CLICKEAR FUERA
     window.onclick = function(event) {
         if (!event.target.closest('.custom-select-container')) {
             document.getElementById("select-dropdown").classList.remove("show");
@@ -159,8 +160,8 @@
         const container = document.getElementById('dropdown-content');
         container.innerHTML = "";
         const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        
         const fechasUnicas = [...new Set(rawDataStore.map(d => d.fecha instanceof Date ? d.fecha.toLocaleDateString() : d.fecha))];
+        
         const fechasMapeadas = fechasUnicas.map(f => {
             const [d, m, a] = f.split('/').map(Number);
             return { original: f, fechaObj: new Date(a, m - 1, d) };
@@ -176,18 +177,11 @@
         nombresMeses.forEach((mes, idx) => {
             if (grupos[mes]) {
                 const mesId = `mes-${idx}`;
-                const groupDiv = document.createElement('div');
-                groupDiv.className = 'month-group';
-                groupDiv.innerHTML = `
-                    <div class="month-label" onclick="toggleMes('${mesId}', event)">
-                        <span>📂 ${mes.toUpperCase()}</span>
-                        <span>▼</span>
-                    </div>
-                    <div id="${mesId}" class="dates-container">
-                        ${grupos[mes].map(f => `<div class="date-option" onclick="seleccionarFecha('${f}', '${f}')">📄 ${f}</div>`).join('')}
-                    </div>
-                `;
-                container.appendChild(groupDiv);
+                container.innerHTML += `
+                    <div class="month-group">
+                        <div class="month-label" onclick="toggleMes('${mesId}', event)"><span>📂 ${mes.toUpperCase()}</span><span>▼</span></div>
+                        <div id="${mesId}" class="dates-container">${grupos[mes].map(f => `<div class="date-option" onclick="seleccionarFecha('${f}', '${f}')">📄 ${f}</div>`).join('')}</div>
+                    </div>`;
             }
         });
     }
@@ -202,7 +196,7 @@
                 await fetchSilencioso(url);
             }
         }
-        document.getElementById('file-count').innerText = `✅ Reservorio listo`;
+        document.getElementById('file-count').innerText = `✅ Reservorio sincronizado`;
     }
 
     async function fetchSilencioso(url) {
@@ -233,25 +227,21 @@
         const fi = document.getElementById('fecha-reservorio').value;
         if(!fi) return;
         const p = fi.split("-");
-        const url = `https://raw.githubusercontent.com/${USUARIO}/${REPO}/main/data/${p[0]}/${obtenerNombreMes(p[1])}/${p[2]}-${p[1]}-${p[0]}.xlsx`;
+        const meses = ["01_Enero", "02_Febrero", "03_Marzo", "04_Abril", "05_Mayo", "06_Junio", "07_Julio", "08_Agosto", "09_Septiembre", "10_Octubre", "11_Noviembre", "12_Diciembre"];
+        const url = `https://raw.githubusercontent.com/${USUARIO}/${REPO}/main/data/${p[0]}/${meses[parseInt(p[1])-1]}/${p[2]}-${p[1]}-${p[0]}.xlsx`;
         await fetchSilencioso(url);
         actualizarSelector(); aplicarFiltro();
-    }
-
-    function obtenerNombreMes(n) {
-        const m = ["01_Enero", "02_Febrero", "03_Marzo", "04_Abril", "05_Mayo", "06_Junio", "07_Julio", "08_Agosto", "09_Septiembre", "10_Octubre", "11_Noviembre", "12_Diciembre"];
-        return m[parseInt(n)-1];
     }
 
     function showTab(e, id) {
         document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        e.currentTarget.classList.add('active');
+        if(e) e.currentTarget.classList.add('active');
         window.dispatchEvent(new Event('resize'));
     }
 
-    function toggleCeco(id) { document.getElementById(id).classList.toggle('open'); }
+    function toggleCeco(id) { const c = document.getElementById(id); if(c) c.classList.toggle('open'); }
     function resetearDatos() { rawDataStore = []; actualizarSelector(); aplicarFiltro(); }
 
     function aplicarFiltro() {
@@ -274,12 +264,12 @@
         let cd = {};
 
         data.forEach(d => {
+            const fStr = d.fecha instanceof Date ? d.fecha.toLocaleDateString() : d.fecha;
             gn += d.nom; gp += d.sap;
             if(ts[d.turno]) { ts[d.turno].n += d.nom; ts[d.turno].p += d.sap; }
             if(!cd[d.ceco]) cd[d.ceco] = { n: 0, p: 0, rows: [] };
-            cd[d.ceco].n += d.nom; cd[d.ceco].p += d.sap;
-            cd[d.ceco].rows.push(d);
-            bodyMem.innerHTML += `<tr><td>${d.fecha instanceof Date ? d.fecha.toLocaleDateString() : d.fecha}</td><td>${d.ot}</td><td>${d.turno}</td><td>${d.ceco}</td><td>${d.nom}</td><td>${d.sap}</td><td>${calcOEE(d.nom, d.sap).toFixed(1)}%</td><td>${calcGE(d.nom, d.sap).toFixed(1)}%</td></tr>`;
+            cd[d.ceco].n += d.nom; cd[d.ceco].p += d.sap; cd[d.ceco].rows.push(d);
+            bodyMem.innerHTML += `<tr><td>${fStr}</td><td>${d.ot}</td><td>${d.turno}</td><td>${d.ceco}</td><td>${d.nom}</td><td>${d.sap}</td><td>${calcOEE(d.nom, d.sap).toFixed(1)}%</td><td>${calcGE(d.nom, d.sap).toFixed(1)}%</td></tr>`;
         });
 
         document.getElementById('dir-oee').innerText = calcOEE(gn, gp).toFixed(1) + "%";
@@ -307,22 +297,15 @@
 
     function renderGrafico(id, t, x, y, c) {
         Plotly.newPlot(id, [{ x, y, type: 'bar', marker: {color: c}, text: y.map(v=>v+'%'), textposition: 'auto' }], { title: t });
-        
-        // REINSTALACIÓN DE LA INTERACCIÓN DE CLIC
-        document.getElementById(id).on('plotly_click', function(data) {
-            const cecoNombre = data.points[0].x;
-            const targetId = 'scroll-' + cecoNombre.replace(/\s+/g, '');
-            const targetElement = document.getElementById(targetId);
-            
-            if(targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth' });
-                // Abre el acordeón del CECO automáticamente
-                const content = targetElement.querySelector('.ceco-content');
+        document.getElementById(id).on('plotly_click', d => {
+            const ceco = d.points[0].x;
+            const target = document.getElementById('scroll-' + ceco.replace(/\s+/g, ''));
+            if(target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+                const content = target.querySelector('.ceco-content');
                 if(content) content.classList.add('open');
-                
-                // Efecto visual de resaltado
-                targetElement.classList.add('highlight-select');
-                setTimeout(() => targetElement.classList.remove('highlight-select'), 1500);
+                target.classList.add('highlight-select');
+                setTimeout(() => target.classList.remove('highlight-select'), 1500);
             }
         });
     }
