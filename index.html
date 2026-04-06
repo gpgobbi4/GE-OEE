@@ -68,8 +68,8 @@
         .js-plotly-plot .plotly .draglayer .nsewdrag, .js-plotly-plot .plotly .point { cursor: pointer !important; }
 
         /* Estilo para los grupos en el selector */
-        optgroup { font-weight: bold; color: var(--primary); background: #fff; }
-        option { font-weight: normal; color: #333; }
+        optgroup { font-weight: bold; color: var(--primary); background: #eee; }
+        option { font-weight: normal; color: #333; padding-left: 10px; }
     </style>
 </head>
 <body>
@@ -215,7 +215,7 @@
         const fechaInput = document.getElementById('fecha-reservorio').value;
         if(!fechaInput) return;
         const p = fechaInput.split("-");
-        const url = `https://raw.githubusercontent.com/${p[0]}/${obtenerNombreMes(p[1])}/${p[2]}-${p[1]}-${p[0]}.xlsx`;
+        const url = `https://raw.githubusercontent.com/${USUARIO}/${REPO}/main/data/${p[0]}/${obtenerNombreMes(p[1])}/${p[2]}-${p[1]}-${p[0]}.xlsx`;
         await fetchSilencioso(url);
         actualizarSelector();
         aplicarFiltro();
@@ -260,7 +260,6 @@
         const s = document.getElementById('fecha-selector');
         const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         
-        // Obtener fechas únicas y convertirlas a objetos Date reales para ordenar
         const fechasUnicas = [...new Set(rawDataStore.map(d => d.fecha instanceof Date ? d.fecha.toLocaleDateString() : d.fecha))];
         
         const fechasMapeadas = fechasUnicas.map(f => {
@@ -268,7 +267,6 @@
             return { original: f, fechaObj: new Date(a, m - 1, d) };
         }).sort((a, b) => a.fechaObj - b.fechaObj);
 
-        // Agrupar por mes
         const grupos = {};
         fechasMapeadas.forEach(item => {
             const mesIdx = item.fechaObj.getMonth();
@@ -279,15 +277,15 @@
 
         s.innerHTML = '<option value="ALL">CONSOLIDADO TOTAL</option>';
         
-        // Mantener orden cronológico de los meses presentes
         nombresMeses.forEach(mes => {
             if (grupos[mes]) {
                 const optGroup = document.createElement('optgroup');
-                optGroup.label = mes.toUpperCase();
+                // Al tocar el menú desplegable, los meses actúan como separadores lógicos.
+                optGroup.label = "📂 " + mes.toUpperCase();
                 grupos[mes].forEach(fecha => {
                     const opt = document.createElement('option');
                     opt.value = fecha;
-                    opt.textContent = fecha;
+                    opt.textContent = "   📄 " + fecha;
                     optGroup.appendChild(opt);
                 });
                 s.appendChild(optGroup);
