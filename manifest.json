@@ -1,0 +1,16 @@
+{
+  "name": "Análisis Gestión Planta CPRII",
+  "short_name": "Gestión CPRII",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#1a2a6c",
+  "theme_color": "#1a2a6c",
+  "description": "Dashboard interactivo para control de OEE y GE.",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1063/1063231.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
